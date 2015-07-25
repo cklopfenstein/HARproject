@@ -1,0 +1,194 @@
+---
+title: "Practical ML Project"
+author: "C. Klopfenstein"
+<<<<<<< HEAD
+date: "July 25, 2015"
+output: html_document
+---
+
+## Summary
+
+We analyze data on Human Activity Reccognition from http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201 (E. Velloso et al.). Data from sensors attached to subjects while lifting weights is classified according to "how well" the activity was performed - with results falling into 5 categories. 159 features are measured for each observation. After preprocessing the data with Principal Components Analysis, the number of features can be reduced to 25. Modeling this data using a Random Forest algorithm results in a prediction accuracy of 96.8%.
+
+<!-- Body -->
+
+```{r, setup, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE}
+=======
+date: "July 13, 2015"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE}
+>>>>>>> 9a60ac5ce754b845e01c98368c5e352893a8aee0
+setwd("~/Devel/R/DataScience/ML/Project")
+
+library(dplyr)
+library(data.table)
+library(ggplot2)
+library(gridExtra)
+library(AppliedPredictiveModeling)
+library(caret)
+
+<<<<<<< HEAD
+set.seed(1234) # for reproducibility
+
+=======
+>>>>>>> 9a60ac5ce754b845e01c98368c5e352893a8aee0
+trainFile <- "./data/pml-training.csv"
+testFile <- "./data/pml-testing.csv"
+
+dtTrain <- read.table(trainFile, header = TRUE, sep = ",")
+dtTest <- read.table(testFile, header = TRUE, sep = ",")
+```
+
+<<<<<<< HEAD
+## Data Processing
+
+Both the training and testing data are obtained from http://groupware.les.inf.puc-rio.br/har. The training data consists of 19622 observations of 160 variables (159 features, plus the classification), the test data consists of 20 observations of 160 variables. For the analysis, we want to reduce the number of features and eliminate redundancy. We will use Principal Component Analysis (PCA) to accomplish that. But first, we can reduce the number of features by inspection: many features are mostly NA (factor) values, and may not be very useful. The more meaningful features have names beginning with: roll, pitch, yaw, total, gyros, accel, magnet. Selecting those features yields a set of 52 (numeric) features.
+
+We can now apply PCA to these features - for a threshold of 0.80, we find 12 principal components. For a threshold of 0.95, we find 25 principal components.
+
+The training data set is further divided into a training set, and a validation set, with 80% of the input going into training, and 20% set aside for cross-validation.
+
+```{r, select, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE}
+# some problems with data.table, so convert it to data frame, and try
+# everything again
+
+dfTrain <- as.data.frame.matrix(dtTrain)
+dfTest <- as.data.frame.matrix(dtTest)
+
+inTrain <- createDataPartition(dfTrain$classe, p = 0.8, list = FALSE)
+training <- dfTrain[inTrain,]
+validation <- dfTrain[-inTrain,]
+
+numericCols <- grep("^(roll|pitch|yaw|total|gyros|accel|magnet).*", 
+                    names(dfTrain), value = TRUE)
+# select 52 of original 159 columns
+
+preProc <- subset(training, TRUE, numericCols)
+trainData <- cbind(training[,"classe"], preProc)
+colnames(trainData)[1] = "classe"
+
+preProc <- subset(validation, TRUE, numericCols)
+valData <- cbind(validation[,"classe"], preProc)
+colnames(valData)[1] = "classe"
+
+```
+
+## Model Building
+
+We can now try to model the training data, using the R caret package. Many options are available, for example linear discriminant analysis (lda), quadratic discriminant analysis (qda),  simple classification trees (rpart), bagging - i.e. bootstrap aggregation (treebag), and random forests (rf).
+```{r, lda, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache =TRUE}
+# try linear discriminant analysis
+ldaPCA95 <- train(classe ~ ., data = trainData, method = "lda",
+                  preProcess = "pca",
+                  trControl = trainControl(preProcOptions = list(thresh = 0.95)))
+# runs in seconds, but only 53% accuracy
+#confusionMatrix(ldaPCA95, newdata=trainData)
+#ldaPCA95
+# cross-validation
+#predLdaPCA95 <- predict(ldaPCA95, valData)
+#confusionMatrix(predLdaPCA95, valData$classe)
+
+```
+
+```{r, qda, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache = TRUE}
+# and quadratic discriminant analysis
+qdaPCA95 <- train(classe ~ ., data = trainData, method = "qda",
+                  preProcess = "pca",
+                  trControl = trainControl(preProcOptions = list(thresh = 0.95)))
+# runs in seconds, but only 75% accuracy
+#confusionMatrix(qdaPCA95, newdata=trainData)
+#qdaPCA95
+
+#predQdaPCA95 <- predict(qdaPCA95, valData)
+#confusionMatrix(predQdaPCA95, valData$classe)
+
+```
+
+```{r, rpart, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache = TRUE}
+# classification tree
+rpartPCA95 <- train(classe ~ ., data = trainData, method = "rpart",
+                    preProcess = "pca",
+                    trControl = trainControl(preProcOptions = list(thresh = 0.95)))
+
+#confusionMatrix(rpartPCA95, newdata=trainData)
+
+# cross-validation
+#predPartPCA95 <- predict(rpartPCA95, valData)
+#confusionMatrix(predPartPCA95, valData$classe)
+
+```
+```{r, bagcompute, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache = TRUE}
+# also try bagging - use method treebag - again, with PCA95
+bagPCA95 <- train(classe ~ ., data = trainData, method = "treebag",
+                  preProcess = "pca",
+                  trControl = trainControl(preProcOptions = list(thresh = 0.95)))
+# runs in 5 - 10 minutes
+```
+
+```{r, bagdisplay, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache = FALSE}
+#confusionMatrix(bagPCA95, newdata=trainData)
+#bagPCA95
+# cross-validation
+#predBagPCA95 <- predict(bagPCA95, valData)
+#confusionMatrix(predBagPCA95, valData$classe)
+
+```
+
+```{r, rfcompute, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache = TRUE}
+# lengthy computation, so cache this chunk
+
+# random forest
+# set number of resamples to 10 (think that default is 30)
+# set PCA threshold to 0.8 (12 principal components)
+rfPCA80 <- train(classe ~ ., data = trainData, method = "rf",
+                 preProcess = "pca",
+                 trControl = trainControl(preProcOptions = list(thresh = 0.80),
+                                          number = 10))
+# set PCA threshold to 0.95 (25 principal components)
+rfPCA95 <- train(classe ~ ., data = trainData, method = "rf",
+                 preProcess = "pca",
+                 trControl = trainControl(preProcOptions = list(thresh = 0.95),
+                                          number = 10))
+
+```
+
+```{r, rfdisplay, echo = FALSE, eval = TRUE, message = FALSE, error = FALSE, comment = FALSE, warning = FALSE, cache = FALSE}
+# threshold = 0.80
+#confusionMatrix(rfPCA80, newdata=trainData)
+#rfPCA80
+
+# cross-validation
+#predRfPCA80 <- predict(rfPCA80, valData)
+#confusionMatrix(predict(rfPCA80, valData), valData$classe)
+
+# threshold = 0.95
+#confusionMatrix(rfPCA95, newdata=trainData)
+#rfPCA95
+
+# cross-validation
+#predRfPCA95 <- predict(rfPCA95, valData)
+#confusionMatrix(predict(rfPCA95, valData), valData$classe)
+```
+
+## Results
+
+The Random Forest model with PCA (threshold = 0.95) is used to predict classification values for the test set. 19 / 20 values are predicted correctly (in line with the cross-validation accuracy of 97.86%).
+=======
+>>>>>>> 9a60ac5ce754b845e01c98368c5e352893a8aee0
