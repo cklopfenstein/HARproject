@@ -76,7 +76,7 @@ img {
 <div id="data-processing" class="section level2">
 <h2>Data Processing</h2>
 <p>Both the training and testing data are obtained from <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>. The training data consists of 19622 observations of 160 variables (159 features, plus the classification), the test data consists of 20 observations of 160 variables. For the analysis, we want to reduce the number of features and eliminate redundancy. We will use Principal Component Analysis (PCA) to accomplish that. But first, we can reduce the number of features by inspection: many features are mostly NA (factor) values, and may not be very useful. The more meaningful features have names beginning with: roll, pitch, yaw, total, gyros, accel, magnet. Selecting those features yields a set of 52 (numeric) features.</p>
-<p>We can now apply PCA to these features - for a threshold of 0.80, we find 12 principal components. For a threshold of 0.95, we find 25 principal components. (The threshold is the amount of variance in the data accounted for by the principle components - a higher threshold implies more principal components).</p>
+<p>We can now apply PCA to these features - for a threshold of 0.80, we find 12 principal components. For a threshold of 0.95, we find 25 principal components. (The threshold is the amount of variance in the data accounted for by the principal components - a higher threshold implies more principal components).</p>
 <p>The training data set is further divided into a training set, and a validation set, with 80% of the input going into training, and 20% set aside for cross-validation.</p>
 </div>
 <div id="model-building-and-cross-validation" class="section level2">
@@ -90,6 +90,7 @@ img {
 <th align="left">Model</th>
 <th align="left">Accuracy (training)</th>
 <th align="left">Accuracy (validation)</th>
+<th align="left">Out-of-sample error</th>
 </tr>
 </thead>
 <tbody>
@@ -97,35 +98,93 @@ img {
 <td align="left">LDA, PCA(0.95)</td>
 <td align="left">0.525</td>
 <td align="left">0.535</td>
+<td align="left">0.465</td>
 </tr>
 <tr class="even">
 <td align="left">QDA, PCA(0.95)</td>
 <td align="left">0.739</td>
 <td align="left">0.742</td>
+<td align="left">0.258</td>
 </tr>
 <tr class="odd">
 <td align="left">RPART, PCA(0.95)</td>
 <td align="left">0.364</td>
 <td align="left">0.411</td>
+<td align="left">0.589</td>
 </tr>
 <tr class="even">
 <td align="left">TREEBAG, PCA(0.95)</td>
 <td align="left">0.939</td>
 <td align="left">0.989</td>
+<td align="left">0.011</td>
 </tr>
 <tr class="odd">
 <td align="left">RF, PCA(0.80)</td>
 <td align="left">0.948</td>
 <td align="left">0.99</td>
+<td align="left">0.01</td>
 </tr>
 <tr class="even">
 <td align="left">RF, PCA(0.95)</td>
 <td align="left">0.967</td>
 <td align="left">0.993</td>
+<td align="left">0.007</td>
 </tr>
 </tbody>
 </table>
 <p>We can see that the re-sampling models - TREEBAG, RF - do better than simple classification trees or discriminant analysis. ‘Random Forest’ outperforms ‘Bagging’, but the computation takes about 2x longer.</p>
+<p>The best model tried is Random Forest, with PCA preprocessing (threshold = 0.95), the model output and confusion matrix for the validation set are shown:</p>
+<pre><code>FALSE Random Forest 
+FALSE 
+FALSE 15699 samples
+FALSE    52 predictors
+FALSE     5 classes: 'A', 'B', 'C', 'D', 'E' 
+FALSE 
+FALSE Pre-processing: principal component signal extraction, scaled, centered 
+FALSE Resampling: Bootstrapped (10 reps) 
+FALSE 
+FALSE Summary of sample sizes: 15699, 15699, 15699, 15699, 15699, 15699, ... 
+FALSE 
+FALSE Resampling results across tuning parameters:
+FALSE 
+FALSE   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
+FALSE    2    0.9673750  0.9587283  0.002370673  0.003022618
+FALSE   27    0.9517925  0.9390123  0.003694048  0.004720519
+FALSE   52    0.9514282  0.9385538  0.003564292  0.004554726
+FALSE 
+FALSE Accuracy was used to select the optimal model using  the largest value.
+FALSE The final value used for the model was mtry = 2.</code></pre>
+<pre><code>FALSE Confusion Matrix and Statistics
+FALSE 
+FALSE           Reference
+FALSE Prediction    A    B    C    D    E
+FALSE          A 1116    5    0    0    1
+FALSE          B    0  749    3    0    0
+FALSE          C    0    5  678    6    1
+FALSE          D    0    0    1  636    1
+FALSE          E    0    0    2    1  718
+FALSE 
+FALSE Overall Statistics
+FALSE                                           
+FALSE                Accuracy : 0.9934          
+FALSE                  95% CI : (0.9903, 0.9957)
+FALSE     No Information Rate : 0.2845          
+FALSE     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+FALSE                                           
+FALSE                   Kappa : 0.9916          
+FALSE  Mcnemar's Test P-Value : NA              
+FALSE 
+FALSE Statistics by Class:
+FALSE 
+FALSE                      Class: A Class: B Class: C Class: D Class: E
+FALSE Sensitivity            1.0000   0.9868   0.9912   0.9891   0.9958
+FALSE Specificity            0.9979   0.9991   0.9963   0.9994   0.9991
+FALSE Pos Pred Value         0.9947   0.9960   0.9826   0.9969   0.9958
+FALSE Neg Pred Value         1.0000   0.9968   0.9981   0.9979   0.9991
+FALSE Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+FALSE Detection Rate         0.2845   0.1909   0.1728   0.1621   0.1830
+FALSE Detection Prevalence   0.2860   0.1917   0.1759   0.1626   0.1838
+FALSE Balanced Accuracy      0.9989   0.9929   0.9938   0.9943   0.9975</code></pre>
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
