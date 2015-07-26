@@ -188,5 +188,7 @@ cmRfPCA95
 
 ## Results
 
-The Random Forest model with PCA (threshold = 0.95) is used to predict classification values for the test set. 19 / 20 values are predicted correctly (in line with the cross-validation accuracy of 
+The Random Forest model with PCA (threshold = 0.95) is used to predict classification values for the test set. 19 / 20 values are predicted correctly (in line with the training set accuracy of 
+`r round(rfPCA95$results$Accuracy[1], 3)`,
+and the cross-validation accuracy of 
 `r round(cmRfPCA95$overall[1], 3)`).
