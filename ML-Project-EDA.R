@@ -30,7 +30,11 @@ DTrain = filter(dtTrain, classe == 'D')
 ETrain = filter(dtTrain, classe == 'E')
 
 qplot(user_name, total_accel_belt, colour = classe, data = ATrain)
-
+qplot(roll_belt, total_accel_belt, colour = classe, data = dtTrain)
+qplot(total_accel_forearm, total_accel_dumbbell, colour = classe, data = dtTrain)
+qplot(pitch_forearm, roll_forearm, colour = classe, data = dtTrain)
+qplot(pitch_forearm, classe, colour = classe, data = dtTrain)
+qplot(gyros_dumbbell_y, gyros_forearm_y, colour = classe, data = dtTrain)
 
 # classification tree
 # need to install package randomForest
@@ -207,8 +211,8 @@ confusionMatrix(rpartPCA95, newdata=trainData)
 
 # cross-validation
 predPartPCA95 <- predict(rpartPCA95, valData)
-confusionMatrix(predPartPCA95, valData$classe)
 
+confusionMatrix(predPartPCA95, valData$classe)
 
 # random forest
 #rfPCA80 <- train(classe ~ ., data = trainData, method = "rf",
